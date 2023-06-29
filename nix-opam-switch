@@ -72,12 +72,13 @@ case "$cmd" in
     out=$(nix-build "$nix_script" --no-out-link -A create --argstr ocaml_version "$ocaml_version")
     # Create an ocaml-system switch with the compiler in the PATH. Opam will
     # just call 'ocaml' to build the 'ocaml-system' package.
-    PATH="$out/bin:$PATH" opam switch create "$switch_name" --packages=ocaml-system
+    PATH="$out/bin:$PATH" opam switch create "$switch_name" \
+      --packages=ocaml-system --no-install
     prefix=$(opam config var --switch "$switch_name" prefix)
     # Copy the compiler and tools into the created switch
     cp -rd --no-preserve=mode -T "$out" "$prefix"
     # Register a GC root to keep $out from being garbage collected
-    nix-store --add-root "$prefix/nix-roots" -r "$out"
+    nix-store --add-root "$prefix/nix-roots" -r "$out" >/dev/null
     ;;
 
   "list-available")
