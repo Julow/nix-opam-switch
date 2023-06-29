@@ -74,7 +74,7 @@ case "$cmd" in
     # just call 'ocaml' to build the 'ocaml-system' package.
     PATH="$out/bin:$PATH" opam switch create "$switch_name" \
       --packages=ocaml-system --no-install
-    prefix=$(opam config var --switch "$switch_name" prefix)
+    prefix=$(opam var --switch "$switch_name" prefix)
     # Copy the compiler and tools into the created switch
     cp -rd --no-preserve=mode -T "$out" "$prefix"
     # Register a GC root to keep $out from being garbage collected
