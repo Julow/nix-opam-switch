@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+# Create and maintain Opam switches where the compiler and some tools are
+# built by Nix.
+#
+# This brings several advantages:
+#
+# - The compiler and the tools might be fetched from Nix's online cache instead
+#   of being built locally. Creating a switch is instant.
+#
+# - Several switches can share the same compiler and tools, reducing disk
+#   usage.
+#
+# - The tools are not built by Opam and their dependencies are not installed in
+#   the switch. They cannot interfere with the projects' own dependencies.
+#
+# - Regular nixpkgs updates and automatic GC can cause Opam switches to expire
+#   on NixOS. The compiler and other binaries contain paths to C libraries in
+#   the Nix store that are not recorded as GC roots and eventually disappear.
+
+usage ()
+{
+  cat <<EOF
+Usage:
+
+  create <switch_name> [ocaml_version]
+
+    'switch_name' is the name of the switch to create. It might be a path, in
+    which case a local switch is created.
+    It is passed as the first argument to 'opam switch create'.
+
+    'ocaml_version' is the OCaml version that is present in Nixpkgs. Valid values
+    include '4.14' but not '4.14.1'. See the sub-command 'list-available'.
+    Defaults to the value of 'switch_name'. It does not automatically detect
+    the version in case of a local switch like Opam does.
+
+  list-available
+
+    List the OCaml versions available.
+EOF
+}
+
+set -e
+
+param_error ()
+{
+  echo "$1" >&2
+  exit 3
+}
+
+cli_error ()
+{
+  echo "$1" >&2
+  usage
+  exit 2
+}
+
+cmd=$1
+shift
+
+OPAMROOT=${OPAMROOT:-$HOME/.opam}
+
+case "$cmd" in
+  "create")
+    if [[ $# -eq 0 ]]; then cli_error "Missing argument <switch_name>."; fi
+    if [[ $# -gt 2 ]]; then cli_error "Too many arguments"; fi
+    switch_name=$1
+    ocaml_version=${2:-$switch_name}
+
+    out=`nix-build ./nix-opam-switch.nix --no-out-link -A create --argstr ocaml_version "$ocaml_version"`
+    PATH="$out/bin:$PATH" opam switch create "$switch_name" --packages=ocaml-system
+    prefix=`opam config var --switch "$switch_name" prefix`
+    echo "Prefix: $prefix"
+    cp -rP -T "$out" "$prefix"
+    nix-store --add-root "$prefix/nix-roots" -r "$out"
+    ;;
+
+  "list-available")
+    nix-instantiate --eval ./nix-opam-switch.nix -A list-available --strict --json | jq -j 'map(. + "\n") | add'
+    ;;
+
+  ?*) cli_error "Unknown command '$1'" ;;
+
+  "") usage ;;
+esac
