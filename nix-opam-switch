@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+: ${nix_script:?This is not a standalone script}
 
 # Create and maintain Opam switches where the compiler and some tools are
 # built by Nix.
@@ -67,16 +67,21 @@ case "$cmd" in
     switch_name=$1
     ocaml_version=${2:-$switch_name}
 
-    out=`nix-build ./nix-opam-switch.nix --no-out-link -A create --argstr ocaml_version "$ocaml_version"`
+    # $out contains the compiler and tools in a hierarchy compatible with an
+    # Opam switch.
+    out=$(nix-build "$nix_script" --no-out-link -A create --argstr ocaml_version "$ocaml_version")
+    # Create an ocaml-system switch with the compiler in the PATH. Opam will
+    # just call 'ocaml' to build the 'ocaml-system' package.
     PATH="$out/bin:$PATH" opam switch create "$switch_name" --packages=ocaml-system
-    prefix=`opam config var --switch "$switch_name" prefix`
-    echo "Prefix: $prefix"
+    prefix=$(opam config var --switch "$switch_name" prefix)
+    # Copy the compiler and tools into the created switch
     cp -rP -T "$out" "$prefix"
+    # Register a GC root to keep $out from being garbage collected
     nix-store --add-root "$prefix/nix-roots" -r "$out"
     ;;
 
   "list-available")
-    nix-instantiate --eval ./nix-opam-switch.nix -A list-available --strict --json | jq -j 'map(. + "\n") | add'
+    nix-instantiate --eval "$nix_script" -A list-available --strict --json | jq -j 'map(. + "\n") | add'
     ;;
 
   ?*) cli_error "Unknown command '$1'" ;;
