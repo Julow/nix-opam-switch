@@ -75,7 +75,7 @@ case "$cmd" in
     PATH="$out/bin:$PATH" opam switch create "$switch_name" --packages=ocaml-system
     prefix=$(opam config var --switch "$switch_name" prefix)
     # Copy the compiler and tools into the created switch
-    cp -rP -T "$out" "$prefix"
+    cp -rd --no-preserve=mode -T "$out" "$prefix"
     # Register a GC root to keep $out from being garbage collected
     nix-store --add-root "$prefix/nix-roots" -r "$out"
     ;;
