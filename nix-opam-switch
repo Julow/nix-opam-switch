@@ -80,7 +80,7 @@ case "$cmd" in
 
     # $out contains the compiler and tools in a hierarchy compatible with an
     # Opam switch.
-    out=$(nix-build "$nix_script" --no-out-link -A create --argstr ocaml_version "$ocaml_version")
+    out=$(nix-build "$nix_script" --no-out-link -A "create.\"$ocaml_version\"")
     # Create an ocaml-system switch with the compiler in the PATH. Opam will
     # just call 'ocaml' to build the 'ocaml-system' package.
     PATH="$out/bin:$PATH" opam switch create "$switch_name" \

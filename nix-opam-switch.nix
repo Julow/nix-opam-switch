@@ -1,4 +1,4 @@
-{ ocaml_version ? null, pkgs ? import <nixpkgs> { } }:
+{ pkgs ? import <nixpkgs> { } }:
 
 with pkgs.lib;
 
@@ -37,7 +37,8 @@ let
 in {
   list-available = mapAttrsToList (v: _: v) ocamlPackages_per_version;
 
-  create = mk_switch (getAttr ocaml_version ocamlPackages_per_version);
+  # Opam switches mapped by OCaml versions.
+  create = mapAttrs (_: mk_switch) ocamlPackages_per_version;
 
   # OCamlformat packages mapped by versions. The version "default" points to
   # the lastest, as defined in nixpkgs.
