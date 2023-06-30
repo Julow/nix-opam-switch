@@ -1,4 +1,5 @@
-{ pkgs ? import <nixpkgs> { } }:
+{ ocamlformat_version ? "" # Argument used in 'create'
+, pkgs ? import <nixpkgs> { } }:
 
 with pkgs.lib;
 
@@ -13,6 +14,14 @@ let
         ocaml_version_of_pkgs ocamlPkgs;
     in nameValuePair name ocamlPkgs)
     (filterAttrs (n: _: hasPrefix "ocamlPackages" n) pkgs.ocaml-ng);
+
+  ocamlformat_per_version = mapAttrs' (n: pkg:
+    let version = if n == "ocamlformat" then "default" else pkg.version;
+    in nameValuePair version pkg)
+  # Filter-out implicit attributes like "overrideDerivation"
+    (filterAttrs (n: _: hasPrefix "ocamlformat" n)
+      (pkgs.callPackage "${pkgs.path}/pkgs/development/tools/ocaml/ocamlformat"
+        { }));
 
   # Rewrite a package to be compatible with the directory hierarchy of an Opam
   # switch
@@ -31,12 +40,18 @@ let
     };
 
   mk_switch = ocamlPkgs:
-    switch_of_paths "opam-switch-${ocaml_version_of_pkgs ocamlPkgs}"
+    let
+      # If the specified version is not right, continue with a default version
+      ocamlformat = if hasAttr ocamlformat_version ocamlformat_per_version then
+        getAttr ocamlformat_version ocamlformat_per_version
+      else
+        pkgs.ocamlformat;
+    in switch_of_paths "opam-switch-${ocaml_version_of_pkgs ocamlPkgs}"
     ocamlPkgs.ocaml.version [
       ocamlPkgs.ocaml
       ocamlPkgs.merlin
       ocamlPkgs.ocp-indent
-      pkgs.ocamlformat
+      ocamlformat
     ];
 
 in {
@@ -49,15 +64,7 @@ in {
   # OCamlformat packages mapped by versions. The version "default" points to
   # the lastest, as defined in nixpkgs.
   # Result matches the hierarchy of an Opam switch.
-  ocamlformat = let
-    ocamlformat_pkgs =
-      # Remove implicit attributes like "overrideDerivation"
-      filterAttrs (n: _: hasPrefix "ocamlformat" n)
-      (pkgs.callPackage "${pkgs.path}/pkgs/development/tools/ocaml/ocamlformat"
-        { });
-    ocamlformat_to_switch = n: pkg:
-      let version = if n == "ocamlformat" then "default" else pkg.version;
-      in nameValuePair version
-      (switch_of_paths "ocamlformat-${version}" pkgs.ocaml.version pkg);
-  in mapAttrs' ocamlformat_to_switch ocamlformat_pkgs;
+  ocamlformat =
+    mapAttrs (v: pkg: switch_of_paths "ocamlformat-${v}" pkgs.ocaml.version pkg)
+    ocamlformat_per_version;
 }

@@ -94,9 +94,13 @@ case "$cmd" in
     fi
     ocaml_version=${2:-$default_version}
 
+    # An empty/invalid value won't make the installation fail
+    ocamlformat_version_or_empty=$(detect_ocamlformat_version)
     # $out contains the compiler and tools in a hierarchy compatible with an
     # Opam switch.
-    out=$(nix-build "$nix_script" --no-out-link -A "create.$(escape_nix_attr "$ocaml_version")")
+    out=$(nix-build "$nix_script" --no-out-link \
+      -A "create.$(escape_nix_attr "$ocaml_version")"\
+      --argstr ocamlformat_version "$ocamlformat_version_or_empty")
     # Create an ocaml-system switch with the compiler in the PATH. Opam will
     # just call 'ocaml' to build the 'ocaml-system' package.
     PATH="$out/bin:$PATH" opam switch create "$switch_name" \
