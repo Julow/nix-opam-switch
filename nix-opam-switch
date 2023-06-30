@@ -66,7 +66,7 @@ cli_error ()
 # Empty string if couldn't be determined
 detect_ocamlformat_version ()
 {
-  sed -nE '/^version\s*=\s*([^#]+)(#.*)?$/s//\1/p' .ocamlformat 2>/dev/null || true
+  sed -nE '/^version *= *([^# ]+)( *#.*)?$/s//\1/p' .ocamlformat 2>/dev/null || true
 }
 
 cmd=${1:-}
