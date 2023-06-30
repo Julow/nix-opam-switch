@@ -69,6 +69,14 @@ detect_ocamlformat_version ()
   sed -nE '/^version *= *([^# ]+)( *#.*)?$/s//\1/p' .ocamlformat 2>/dev/null || true
 }
 
+# Escape and validate a Nix attribute name that can be passed to '-A' to avoid
+# injections.
+escape_nix_attr ()
+{
+  if ! [[ $1 =~ ^[a-zA-Z0-9\._\-]+$ ]]; then param_error "Invalid value '$1'"; fi
+  echo "\"$1\""
+}
+
 cmd=${1:-}
 shift
 
@@ -88,7 +96,7 @@ case "$cmd" in
 
     # $out contains the compiler and tools in a hierarchy compatible with an
     # Opam switch.
-    out=$(nix-build "$nix_script" --no-out-link -A "create.\"$ocaml_version\"")
+    out=$(nix-build "$nix_script" --no-out-link -A "create.$(escape_nix_attr "$ocaml_version")")
     # Create an ocaml-system switch with the compiler in the PATH. Opam will
     # just call 'ocaml' to build the 'ocaml-system' package.
     PATH="$out/bin:$PATH" opam switch create "$switch_name" \
@@ -114,7 +122,7 @@ case "$cmd" in
       v=$1
     fi
     prefix=$(opam var prefix)
-    out=$(nix-build "$nix_script" --no-out-link -A "ocamlformat.\"$v\"")
+    out=$(nix-build "$nix_script" --no-out-link -A "ocamlformat.$(escape_nix_attr "$v")")
     cp -rd --no-preserve=mode -T "$out" "$prefix"
     nix-store --add-root "$prefix/nix-roots/ocamlformat" -r "$out" >/dev/null
     ;;
