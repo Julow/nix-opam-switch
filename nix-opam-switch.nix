@@ -5,9 +5,14 @@ with pkgs.lib;
 let
   ocaml_version_of_pkgs = ocamlPkgs: ocamlPkgs.ocaml.meta.branch;
 
-  ocamlPackages_per_version = mapAttrs'
-    (_: ocamlPkgs: nameValuePair (ocaml_version_of_pkgs ocamlPkgs) ocamlPkgs)
-    (filterAttrs (n: _: hasPrefix "ocamlPackages_" n) pkgs.ocaml-ng);
+  ocamlPackages_per_version = mapAttrs' (n: ocamlPkgs:
+    let
+      name = if n == "ocamlPackages" then
+        "default"
+      else
+        ocaml_version_of_pkgs ocamlPkgs;
+    in nameValuePair name ocamlPkgs)
+    (filterAttrs (n: _: hasPrefix "ocamlPackages" n) pkgs.ocaml-ng);
 
   # Rewrite a package to be compatible with the directory hierarchy of an Opam
   # switch
@@ -37,7 +42,8 @@ let
 in {
   list-available = mapAttrsToList (v: _: v) ocamlPackages_per_version;
 
-  # Opam switches mapped by OCaml versions.
+  # Opam switches mapped by OCaml versions. The version "default" maps to the
+  # default version exposed in nixpkgs (which is not always the lastest).
   create = mapAttrs (_: mk_switch) ocamlPackages_per_version;
 
   # OCamlformat packages mapped by versions. The version "default" points to
