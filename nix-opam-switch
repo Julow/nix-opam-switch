@@ -84,8 +84,10 @@ case "$cmd" in
       --argstr ocamlformat_version "$ocamlformat_version_or_empty")
     # Create an ocaml-system switch with the compiler in the PATH. Opam will
     # just call 'ocaml' to build the 'ocaml-system' package.
-    PATH="$out/bin:$PATH" opam switch create "$switch_name" \
-      --packages=ocaml-system --no-install
+    # Install 'ocamlfind' before copying the compiler in the 'bin/' directory,
+    # as its adding a 'ocaml' binary that calls itself in a loop in this setup
+    PATH="$out/bin:$PATH" opam switch create "$switch_name" --no-install \
+      --repos=default,nix-opam-switch --packages=ocaml-system,ocamlfind
     prefix=$(opam var --switch "$switch_name" prefix)
     # Copy the compiler and tools into the created switch
     cp -rd --no-preserve=mode -T "$out" "$prefix"
