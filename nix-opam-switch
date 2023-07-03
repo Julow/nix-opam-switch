@@ -114,7 +114,7 @@ case "$cmd" in
     nix-store --add-root "$prefix/nix-roots/ocamlformat" -r "$out" >/dev/null
     ;;
 
-  ?*) cli_error "Unknown command '$1'" ;;
+  ?*) cli_error "Unknown command '$cmd'" ;;
 
   "") usage ;;
 esac
