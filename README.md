@@ -42,8 +42,8 @@ Or by saving this to a file and running `nix-env -if the_file.nix`:
 
 pkgs.callPackage (pkgs.fetchgit {
   url = "https://github.com/Julow/nix-opam-switch";
-  rev = "7f26d23cd73a7d193ae3e2de68f73e01f39cb063";
-  sha256 = "0slm39kp08qg33i08pm26wpk3ds4xb02p4w9x7v436g0f42brs23";
+  rev = "efeceac93235d3b989bca55a3cde06467f10bf8f";
+  sha256 = "sha256-H2RsRcQTPI23ggjDmghqbw/3oVqNcEYMdf1IKckkr2Y=";
 }) { }
 ```
 
