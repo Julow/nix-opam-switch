@@ -4,6 +4,8 @@
 with pkgs.lib;
 
 let
+  overlay = pkgs.callPackage ./overlay { };
+
   ocaml_version_of_pkgs = ocamlPkgs: ocamlPkgs.ocaml.meta.branch;
 
   ocamlPackages_per_version = mapAttrs' (n: ocamlPkgs:
@@ -15,13 +17,9 @@ let
     in nameValuePair name ocamlPkgs)
     (filterAttrs (n: _: hasPrefix "ocamlPackages" n) pkgs.ocaml-ng);
 
-  ocamlformat_per_version = mapAttrs' (n: pkg:
-    let version = if n == "ocamlformat" then "default" else pkg.version;
-    in nameValuePair version pkg)
-  # Filter-out implicit attributes like "overrideDerivation"
-    (filterAttrs (n: _: hasPrefix "ocamlformat" n)
-      (pkgs.callPackage "${pkgs.path}/pkgs/development/tools/ocaml/ocamlformat"
-        { }));
+  # Versions of OCamlformat indexed by their version string.
+  ocamlformat_per_version = genAttrs overlay.ocamlformat_versions
+    (version: overlay.ocamlformat.override { inherit version; });
 
   # Rewrite a package to be compatible with the directory hierarchy of an Opam
   # switch
@@ -53,7 +51,7 @@ let
       ocamlformat = if hasAttr ocamlformat_version ocamlformat_per_version then
         getAttr ocamlformat_version ocamlformat_per_version
       else
-        pkgs.ocamlformat;
+        overlay.ocamlformat;
     in switch_of_paths {
       name = "opam-switch-${ocaml_version_of_pkgs ocamlPkgs}";
       ocaml_version = ocamlPkgs.ocaml.version;
