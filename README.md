@@ -4,47 +4,50 @@ Create and maintain Opam switches where the compiler and tools are built by Nix.
 
 This brings several advantages:
 
-- The compiler and the tools might be fetched from Nix's online cache.
-  Creating a switch is much faster.
+- Several switches can share the same compiler and tools.
+  Reduces disk usage and makes switch creation potentially instant.
 
-- Several switches can share the same compiler and tools,
-  reducing disk usage.
+- The compiler and the tools might be fetched from Nix's online cache.
+  If the compiler have not been built before, there's a chance that it could be
+  fetched in seconds.
 
 - Tools' dependencies are not installed in the switch.
   They cannot interfere with the projects' dependencies.
 
-- On NixOS, regular updates and automatic GC can make Opam switches expire.
-  The compiler and other binaries contain absolute paths to C libraries that are not recorded as GC roots and eventually disappear.
+- Switches created by this tool do not expire on NixOS.
+  The compiler and other binaries contain absolute paths to C libraries that
+  are not recorded as GC roots and are eventually collected.
 
 The tools installed alongside the compiler are:
 
 - Merlin
 - ocp-indent
-- OCamlformat
+- OCamlformat (with version specified in `./.ocamlformat`)
 
 ## Install
 
-This tools rely on Nix and Opam to be installed.
-Nix is also required for the installation.
+This tool relies on Nix and Opam to be also installed, they are not part of the
+closure to avoid messing up with their mutable states.
 
-Installation from source (useful to hack on the code):
+Save this to a file and run `nix-env -if the_file.nix`:
+
+```nix
+{ pkgs ? import <nixpkgs> { } }:
+
+# Or use the following in your NixOS configuration, nixpkgs overlay, etc..
+pkgs.callPackage (pkgs.fetchgit {
+  url = "https://github.com/Julow/nix-opam-switch";
+  rev = "d9035b22b3e362210e190bab36f58fd18743992e";
+  sha256 = "sha256-svGlLtYysrgNA3/E1kWsgDvGU51lAXdH8z7qIn/2tD0=";
+}) { }
+```
+
+Or installation from source (useful to hack on the code):
 
 ```bash
 git clone https://github.com/Julow/nix-opam-switch
 cd nix-opam-switch
 nix-env -if .
-```
-
-Or by saving this to a file and running `nix-env -if the_file.nix`:
-
-```nix
-{ pkgs ? import <nixpkgs> { } }:
-
-pkgs.callPackage (pkgs.fetchgit {
-  url = "https://github.com/Julow/nix-opam-switch";
-  rev = "efeceac93235d3b989bca55a3cde06467f10bf8f";
-  sha256 = "sha256-H2RsRcQTPI23ggjDmghqbw/3oVqNcEYMdf1IKckkr2Y=";
-}) { }
 ```
 
 `nix-env` can be repeated to update the package.
@@ -53,13 +56,13 @@ pkgs.callPackage (pkgs.fetchgit {
 
 ### Local switch
 
-This will create a local Opam switch with a recent version of OCaml, Merlin, ocp-indent and OCamlformat installed:
+To create a local switch with a recent version of OCaml, Merlin, ocp-indent and OCamlformat installed:
 
 ```bash
 $ nix-opam-switch create .
 ```
 
-It's possible to specify a version for OCaml. The available versions can be queried with:
+To create a local switch with a specific version of OCaml:
 
 ```bash
 $ nix-opam-switch list-available
@@ -71,7 +74,7 @@ $ nix-opam-switch create . 5.0
 
 ## Global switch
 
-Global switches can be created like this:
+To create a global switch:
 
 ```bash
 $ nix-opam-switch create 4.14
@@ -81,14 +84,14 @@ $ nix-opam-switch create 4.14-foo # Shortcut for the previous command
 
 ### Re-installing OCamlformat
 
-It can be useful to update the version of OCamlformat without removing the switch and starting from scratch.
-This command will read `.ocamlformat` to detect which version to install:
+To install the version of OCamlformat specified by the `.ocamlformat` in the
+current directory:
 
 ```bash
 $ nix-opam-switch ocamlformat
 ```
 
-It's possible to specify a version:
+To install a specified version of OCamlformat:
 
 ```bash
 $ nix-opam-switch ocamlformat 0.24.1
