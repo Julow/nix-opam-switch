@@ -21,6 +21,15 @@ let
   ocamlformat_per_version = genAttrs overlay.ocamlformat_versions
     (version: overlay.ocamlformat.override { inherit version; });
 
+  # Returns '[ pkg ]' if the given package is available, '[]' otherwise.
+  # A package is available if it evaluates successfully.
+  if_available = name: pkg:
+    let e = builtins.tryEval (pkg.outPath);
+    in if e.success then
+      [ e.value ]
+    else
+      warn "Package '${name}' is not available for this OCaml version." [ ];
+
   # Rewrite a package to be compatible with the directory hierarchy of an Opam
   # switch
   switch_of_paths = { name, ocaml_version, paths, postBuild ? "" }:
@@ -52,11 +61,17 @@ let
         getAttr ocamlformat_version ocamlformat_per_version
       else
         overlay.ocamlformat;
+
+      paths = concatLists [
+        [ ocamlPkgs.ocaml ]
+        (if_available "merlin" ocamlPkgs.merlin)
+        (if_available "ocp-indent" ocamlPkgs.ocp-indent)
+        (if_available "ocamlformat" ocamlformat)
+      ];
     in switch_of_paths {
       name = "opam-switch-${ocaml_version_of_pkgs ocamlPkgs}";
       ocaml_version = ocamlPkgs.ocaml.version;
-      paths =
-        [ ocamlPkgs.ocaml ocamlPkgs.merlin ocamlPkgs.ocp-indent ocamlformat ];
+      inherit paths;
       postBuild = ''
         ln -sf "${override_ocaml_toplevel ocamlPkgs.ocaml}" "$out/bin/ocaml"
       '';
