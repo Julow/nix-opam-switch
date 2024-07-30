@@ -16,6 +16,7 @@ rec {
     "0.25.1"
     "0.26.0"
     "0.26.1"
+    "0.26.2"
   ];
 
   ocamlformat = ocamlPackages.callPackage ocamlformat/ocamlformat.nix {
