@@ -91,9 +91,8 @@ case "$cmd" in
     prefix=$(opam var --switch "$switch_name" prefix)
     # Copy the compiler and tools into the created switch
     cp -rd --no-preserve=mode -T "$out" "$prefix"
-    # Hack: Symlinks interfere with Opam's system package integrity check
-    cp -L --remove-destination "$out/bin/ocamlc"{,.opt} "$prefix/bin/"
-    chmod +x "$prefix/bin/ocamlc"{,.opt}
+    # Hack: Work around system package integrity check
+    rm "$prefix/.opam-switch/config/ocaml-system.config"
     # Register a GC root to keep $out from being garbage collected
     nix-store --add-root "$prefix/nix-roots/switch" -r "$out" >/dev/null
     ;;
