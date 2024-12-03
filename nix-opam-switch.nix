@@ -17,10 +17,6 @@ let
     in nameValuePair name ocamlPkgs)
     (filterAttrs (n: _: hasPrefix "ocamlPackages" n) pkgs.ocaml-ng);
 
-  # Versions of OCamlformat indexed by their version string.
-  ocamlformat_per_version = genAttrs overlay.ocamlformat_versions
-    (version: overlay.ocamlformat.override { inherit version; });
-
   # Returns '[ pkg ]' if the given package is available, '[]' otherwise.
   # A package is available if it evaluates successfully.
   if_available = name: pkg:
@@ -57,10 +53,10 @@ let
   mk_switch = ocamlPkgs:
     let
       # If the specified version is not right, continue with a default version
-      ocamlformat = if hasAttr ocamlformat_version ocamlformat_per_version then
-        getAttr ocamlformat_version ocamlformat_per_version
+      ocamlformat = if hasAttr ocamlformat_version overlay.ocamlformat_versions then
+        getAttr ocamlformat_version overlay.ocamlformat_versions
       else
-        overlay.ocamlformat;
+        overlay.ocamlformat_default;
 
       paths = concatLists [
         [ ocamlPkgs.ocaml ]
@@ -92,5 +88,5 @@ in {
       name = "ocamlformat-${v}";
       ocaml_version = pkgs.ocaml.version;
       paths = [ pkg ];
-    }) ocamlformat_per_version;
+    }) overlay.ocamlformat_versions;
 }
