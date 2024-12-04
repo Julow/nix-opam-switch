@@ -42,6 +42,7 @@ let
 
     versions = {
       "0.26.2" = ocamlformat.override { version = "0.26.2"; };
+      "0.27.0" = ocamlformat.override { version = "0.27.0"; };
     };
   };
 
@@ -51,5 +52,5 @@ rec {
   # Versions of OCamlformat indexed by their version string.
   ocamlformat_versions = pre52.versions // post52.versions;
 
-  ocamlformat_default = getAttr "0.26.2" ocamlformat_versions;
+  ocamlformat_default = getAttr "0.27.0" ocamlformat_versions;
 }
