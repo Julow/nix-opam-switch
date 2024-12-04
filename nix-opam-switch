@@ -73,26 +73,30 @@ case "$cmd" in
     else
       default_version=${switch_name%%-*}
     fi
-    ocaml_version=${2:-$default_version}
+    switch_version=${2:-$default_version}
 
     # An empty/invalid value won't make the installation fail
     ocamlformat_version_or_empty=$(detect_ocamlformat_version)
     # $out contains the compiler and tools in a hierarchy compatible with an
     # Opam switch.
     out=$(nix-build "$nix_script" --no-out-link \
-      -A "create.$(escape_nix_attr "$ocaml_version")"\
+      -A "create.$(escape_nix_attr "$switch_version")"\
       --argstr ocamlformat_version "$ocamlformat_version_or_empty")
+    ocaml_version=$("$out/bin/ocamlc" -version)
     # Create an ocaml-system switch with the compiler in the PATH. Opam will
     # just call 'ocaml' to build the 'ocaml-system' package.
     # Install 'ocamlfind' before copying the compiler in the 'bin/' directory,
     # as its adding a 'ocaml' binary that calls itself in a loop in this setup
     PATH="$out/bin:$PATH" opam switch create "$switch_name" --no-install \
-      --repos=default,nix-opam-switch --packages=ocaml-system,ocamlfind
+      --repos=default,nix-opam-switch \
+      --packages="ocaml-system.$ocaml_version,ocamlfind"
     prefix=$(opam var --switch "$switch_name" prefix)
     # Copy the compiler and tools into the created switch
     cp -rd --no-preserve=mode -T "$out" "$prefix"
     # Hack: Work around system package integrity check
     rm "$prefix/.opam-switch/config/ocaml-system.config"
+    # Hack: Work around ocaml-system availability check
+    opam var --switch="$switch_name" sys-ocaml-version="$ocaml_version"
     # Register a GC root to keep $out from being garbage collected
     nix-store --add-root "$prefix/nix-roots/switch" -r "$out" >/dev/null
     ;;
