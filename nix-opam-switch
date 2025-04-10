@@ -118,6 +118,7 @@ case "$cmd" in
     out=$(nix-build "$nix_script" --no-out-link -A "ocamlformat.$(escape_nix_attr "$v")")
     cp -rd --no-preserve=mode -T "$out" "$prefix"
     nix-store --add-root "$prefix/nix-roots/ocamlformat" -r "$out" >/dev/null
+    echo "Using version $v"
     ;;
 
   ?*) cli_error "Unknown command '$cmd'" ;;
