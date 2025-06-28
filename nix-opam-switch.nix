@@ -4,9 +4,8 @@
 with pkgs.lib;
 
 let
-  overlay = pkgs.callPackage ./overlay { };
-
-  inherit (pkgs.callPackage ./recent.nix {}) ocamlPackages_per_version;
+  inherit (pkgs.callPackage ./recent.nix { })
+    ocamlPackages_per_version ocamlformat_versions;
 
   ocaml_version_of_pkgs = ocamlPkgs: ocamlPkgs.ocaml.meta.branch;
 
@@ -46,10 +45,12 @@ let
   mk_switch = ocamlPkgs:
     let
       # If the specified version is not right, continue with a default version
-      ocamlformat = if hasAttr ocamlformat_version overlay.ocamlformat_versions then
-        getAttr ocamlformat_version overlay.ocamlformat_versions
+      version = if hasAttr ocamlformat_version ocamlformat_versions then
+        ocamlformat_version
       else
-        overlay.ocamlformat_default;
+        "default";
+
+      ocamlformat = getAttr version ocamlformat_versions;
 
       paths = concatLists [
         [ ocamlPkgs.ocaml ]
@@ -81,5 +82,5 @@ in {
       name = "ocamlformat-${v}";
       ocaml_version = pkgs.ocaml.version;
       paths = [ pkg ];
-    }) overlay.ocamlformat_versions;
+    }) ocamlformat_versions;
 }
