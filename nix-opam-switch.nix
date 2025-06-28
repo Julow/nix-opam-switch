@@ -6,16 +6,9 @@ with pkgs.lib;
 let
   overlay = pkgs.callPackage ./overlay { };
 
-  ocaml_version_of_pkgs = ocamlPkgs: ocamlPkgs.ocaml.meta.branch;
+  inherit (pkgs.callPackage ./recent.nix {}) ocamlPackages_per_version;
 
-  ocamlPackages_per_version = mapAttrs' (n: ocamlPkgs:
-    let
-      name = if n == "ocamlPackages" then
-        "default"
-      else
-        ocaml_version_of_pkgs ocamlPkgs;
-    in nameValuePair name ocamlPkgs)
-    (filterAttrs (n: _: hasPrefix "ocamlPackages" n) pkgs.ocaml-ng);
+  ocaml_version_of_pkgs = ocamlPkgs: ocamlPkgs.ocaml.meta.branch;
 
   # Returns '[ pkg ]' if the given package is available, '[]' otherwise.
   # A package is available if it evaluates successfully.
