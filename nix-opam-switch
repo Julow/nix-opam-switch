@@ -103,7 +103,7 @@ case "$cmd" in
 
   "list-available")
     if [[ $# -gt 0 ]]; then cli_error "Too many arguments"; fi
-    nix-instantiate --eval "$nix_script" -A list-available --strict --json | jq -j 'map(. + "\n") | add'
+    nix --extra-experimental-features nix-command eval -f "$nix_script" list-available --json | jq -j 'map(. + "\n") | add'
     ;;
 
   "ocamlformat")
@@ -119,6 +119,11 @@ case "$cmd" in
     cp -rd --no-preserve=mode -T "$out" "$prefix"
     nix-store --add-root "$prefix/nix-roots/ocamlformat" -r "$out" >/dev/null
     echo "Using version $v"
+    ;;
+
+  "list-ocamlformat")
+    if [[ $# -gt 0 ]]; then cli_error "Too many arguments"; fi
+    nix --extra-experimental-features nix-command eval -f "$nix_script" list-ocamlformat --json | jq -j 'map(. + "\n") | add'
     ;;
 
   ?*) cli_error "Unknown command '$cmd'" ;;

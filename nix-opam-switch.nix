@@ -69,6 +69,7 @@ let
 
 in {
   list-available = mapAttrsToList (v: _: v) ocamlPackages_per_version;
+  list-ocamlformat = mapAttrsToList (v: _: v) ocamlformat_versions;
 
   # Opam switches mapped by OCaml versions. The version "default" maps to the
   # default version exposed in nixpkgs (which is not always the lastest).
