@@ -22,9 +22,9 @@ let
     "ocamlPackages" attrs;
 
   find_ocamlformat_version = attrs:
-    find_versioned_attributes
-    (name: val: if name == "ocamlformat" then "default" else val.version)
-    "ocamlformat" attrs;
+    find_versioned_attributes (_: val: val.version) "ocamlformat_" attrs // {
+      default = attrs.ocamlformat;
+    };
 
   recent_ocaml-ng =
     pkgs.callPackage (recent_nixpkgs + "/pkgs/top-level/ocaml-packages.nix")
