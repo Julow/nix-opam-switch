@@ -8,8 +8,8 @@ let
   # TODO: Fetch something when I have network
   recent_nixpkgs = fetchTarball {
     url =
-      "https://github.com/NixOS/nixpkgs/archive/6ddf8ff6929b9f6165ec032a715e1b0904cb1716.tar.gz";
-    sha256 = "1lzxx0djm9crpqvhcjv9yphn4g756794rvz4syv0gcj11aqyq0qc";
+      "https://github.com/NixOS/nixpkgs/archive/c787dd813d78c85511b307135a703504e01cd4cf.tar.gz";
+    sha256 = "sha256:18nyzgfl1y1h6v5gixyjd9509c6cn6a704lj0wb5sdmnk856c897";
   };
 
   find_versioned_attributes = version_of_attr: prefix: attrs:
@@ -19,7 +19,18 @@ let
   find_ocamlPackages_version = attrs:
     find_versioned_attributes (name: val:
       if name == "ocamlPackages" then "default" else val.ocaml.meta.branch)
-    "ocamlPackages" attrs;
+    "ocamlPackages" (builtins.removeAttrs attrs [
+      # Removed versions
+      "ocamlPackages_4_00_1"
+      "ocamlPackages_4_01_0"
+      "ocamlPackages_4_02"
+      "ocamlPackages_4_03"
+      "ocamlPackages_4_04"
+      "ocamlPackages_4_05"
+      "ocamlPackages_4_06"
+      "ocamlPackages_4_07"
+      "ocamlPackages_4_08"
+    ]);
 
   find_ocamlformat_version = attrs:
     find_versioned_attributes (_: val: val.version) "ocamlformat_" attrs // {
