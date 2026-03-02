@@ -1,13 +1,31 @@
-{ ocamlformat_version ? "" # Argument used in 'create'
-, pkgs ? import <nixpkgs> { } }:
+{
+  ocamlformat_version ? "", # Argument used in 'create'
+  pkgs ? import <nixpkgs> { },
+}:
 
 with pkgs.lib;
 
 let
   inherit (pkgs.callPackage ./recent.nix { })
-    ocamlPackages_per_version ocamlformat_versions;
+    ocamlPackages_per_version
+    ocamlformat_versions
+    ;
 
   ocaml_version_of_pkgs = ocamlPkgs: ocamlPkgs.ocaml.meta.branch;
+
+  get_ocamlformat_version =
+    version:
+    # If the specified version is not right, continue with a default version
+    let
+      v =
+        if hasAttr version ocamlformat_versions then
+          version
+        else if version == "" then
+          "default"
+        else
+          warn "OCamlformat version '${version}' unsupported, using 'default'." "default";
+    in
+    getAttr v ocamlformat_versions;
 
   # Returns '[ pkg ]' if the given package is available, '[]' otherwise.
   # A package is available if it evaluates successfully.
@@ -44,13 +62,7 @@ let
 
   mk_switch = ocamlPkgs:
     let
-      # If the specified version is not right, continue with a default version
-      version = if hasAttr ocamlformat_version ocamlformat_versions then
-        ocamlformat_version
-      else
-        "default";
-
-      ocamlformat = getAttr version ocamlformat_versions;
+      ocamlformat = get_ocamlformat_version ocamlformat_version;
 
       paths = concatLists [
         [ ocamlPkgs.ocaml ]
