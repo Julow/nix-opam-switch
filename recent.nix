@@ -8,8 +8,8 @@ let
   # TODO: Fetch something when I have network
   recent_nixpkgs = fetchTarball {
     url =
-      "https://github.com/NixOS/nixpkgs/archive/c787dd813d78c85511b307135a703504e01cd4cf.tar.gz";
-    sha256 = "sha256:18nyzgfl1y1h6v5gixyjd9509c6cn6a704lj0wb5sdmnk856c897";
+      "https://github.com/NixOS/nixpkgs/archive/13043924aaa7375ce482ebe2494338e058282925.tar.gz";
+    sha256 = "sha256:1pbv1c3syp94rh147s2nhbzfcib01blz3s7g290m43s3nk71404z";
   };
 
   find_versioned_attributes = version_of_attr: prefix: attrs:

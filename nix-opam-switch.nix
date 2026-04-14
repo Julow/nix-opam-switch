@@ -127,7 +127,7 @@ in
   # Result matches the hierarchy of an Opam switch.
   ocamlformat = mapAttrs (
     version: path:
-    opam_package_of_path {
+    opam_package_of_path { } {
       name = "ocamlformat";
       inherit version path;
     }
